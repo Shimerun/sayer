@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sayer</title>
+  <style>
+    :root {
+      --ink: #12172d;
+      --panel: #111a39;
+      --accent: #d91570;
+      --violet: #35306f;
+      --line: #e8e8ee;
+      --muted: #74778a;
+      --paper: #fbfbfd;
+      --shadow: 0 18px 48px rgba(17, 26, 57, .14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 14% 10%, rgba(217, 21, 112, .10), transparent 24rem),
+        linear-gradient(135deg, #f8f9fc 0%, #eef1f7 100%);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      background: rgba(255, 255, 255, .80);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: relative;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      background: #fff;
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      min-height: 104px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 28px;
+      color: #fff;
+      background: var(--panel);
+    }
+
+    .brand h1 {
+      margin: 0 0 4px;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, .72);
+    }
+
+    .items {
+      flex: 1;
+      overflow: auto;
+      padding: 10px 0 92px;
+    }
+
+    .item-row {
+      width: 100%;
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px 0 28px;
+      color: var(--ink);
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      transition: transform .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .item-row:hover,
+    .item-row.is-active {
+      background: #f5f6fb;
+    }
+
+    .item-row:hover {
+      transform: translateX(3px);
+    }
+
+    .item-title {
+      overflow: hidden;
+      font-weight: 700;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .count {
+      min-width: 32px;
+      height: 32px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 800;
+      background: var(--violet);
+      font-size: 14px;
+    }
+
+    .delete-row {
+      min-width: 74px;
+      height: 64px;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 700;
+      transition: filter .18s ease, transform .18s ease;
+    }
+
+    .delete-row:hover {
+      filter: brightness(.94);
+      transform: translateX(-2px);
+    }
+
+    .add-item {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(217, 21, 112, .35);
+      font-size: 0;
+      line-height: 1;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .add-item::before {
+      content: "+";
+      display: block;
+      width: 100%;
+      text-align: center;
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 52px;
+      transform: translateY(-2px);
+    }
+
+    .add-item:hover {
+      transform: translateX(-50%) translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 24px rgba(217, 21, 112, .38);
+    }
+
+    .add-item:active {
+      transform: translateX(-50%) scale(.96);
+    }
+
+    .content {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+      background: var(--paper);
+    }
+
+    .topbar {
+      min-height: 104px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 32px;
+      color: #fff;
+      background: var(--panel);
+    }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--violet);
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .icon-button:hover,
+    .title-action:hover,
+    .send:hover {
+      transform: translateY(-1px);
+      background: #464081;
+    }
+
+    .arrow-left,
+    .arrow-right {
+      position: relative;
+      color: #fff;
+    }
+
+    .arrow-left::before,
+    .arrow-right::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: block;
+      width: 24px;
+      height: 24px;
+      background: currentColor;
+      transform: translate(-50%, -50%);
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M13.29 5.29a1 1 0 0 1 1.42 0l6 6a1 1 0 0 1 0 1.42l-6 6a1 1 0 0 1-1.42-1.42L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.3-4.29a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E") center / contain no-repeat;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M13.29 5.29a1 1 0 0 1 1.42 0l6 6a1 1 0 0 1 0 1.42l-6 6a1 1 0 0 1-1.42-1.42L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.3-4.29a1 1 0 0 1 0-1.42z'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .arrow-left::before {
+      transform: translate(-50%, -50%) rotate(180deg);
+    }
+
+    .title-area {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-action {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255, 255, 255, .16);
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .title-action::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      display: block;
+      background: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M18.42 2.86a2.1 2.1 0 0 1 2.97 2.97L9.05 18.17a1 1 0 0 1-.45.26l-4.2 1.12a1 1 0 0 1-1.22-1.22l1.12-4.2a1 1 0 0 1 .26-.45L18.42 2.86ZM5.56 17.17l1.55-.42-1.13-1.13-.42 1.55ZM7.1 13.67l2 2L18.9 5.86l-2-2-9.8 9.81Z'/%3E%3C/svg%3E") center / contain no-repeat;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M18.42 2.86a2.1 2.1 0 0 1 2.97 2.97L9.05 18.17a1 1 0 0 1-.45.26l-4.2 1.12a1 1 0 0 1-1.22-1.22l1.12-4.2a1 1 0 0 1 .26-.45L18.42 2.86ZM5.56 17.17l1.55-.42-1.13-1.13-.42 1.55ZM7.1 13.67l2 2L18.9 5.86l-2-2-9.8 9.81Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .title-edit-form {
+      width: min(620px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42px 42px;
+      gap: 8px;
+      align-items: center;
+      animation: fadeUp .18s ease;
+    }
+
+    .title-edit-form[hidden],
+    .title-action[hidden],
+    #screenTitle[hidden] {
+      display: none;
+    }
+
+    .title-edit-form input {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-bottom: 2px solid rgba(255, 255, 255, .48);
+      outline: 0;
+      color: #fff;
+      background: transparent;
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 700;
+      transition: border-color .32s ease, background-color .32s ease, box-shadow .32s ease;
+    }
+
+    .title-edit-form input:focus {
+      border-color: #fff;
+      background: rgba(255, 255, 255, .08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+    }
+
+    .title-edit-form input::placeholder {
+      color: rgba(255, 255, 255, .58);
+    }
+
+    .mini-action {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--violet);
+      font-size: 18px;
+      font-weight: 800;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .mini-action:hover {
+      transform: translateY(-1px);
+      background: #464081;
+    }
+
+    .mini-action.cancel {
+      background: rgba(255, 255, 255, .16);
+    }
+
+    .mini-action.cancel:hover {
+      background: rgba(255, 255, 255, .24);
+    }
+
+    .topbar h2 {
+      max-width: 760px;
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: clamp(20px, 3vw, 28px);
+      line-height: 1.12;
+      letter-spacing: 0;
+      animation: fadeUp .18s ease;
+    }
+
+    .main {
+      min-width: 0;
+      overflow: auto;
+      padding: 28px 32px;
+    }
+
+    .comments {
+      display: grid;
+      gap: 26px;
+      max-width: 760px;
+      animation: fadeUp .22s ease;
+    }
+
+    .comment {
+      position: relative;
+      padding: 16px 44px 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      border: 1px solid #ececf2;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(17, 26, 57, 0.03);
+      animation: fadeUp .22s ease;
+    }
+
+    .comment-delete {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--muted);
+      background: transparent;
+      opacity: 0;
+      transition: opacity .18s ease, color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    .comment-delete::before,
+    .comment-delete::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 2px;
+      border-radius: 2px;
+      background: currentColor;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .comment-delete::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .comment:hover .comment-delete,
+    .comment-delete:focus-visible {
+      opacity: 1;
+    }
+
+    .comment-delete:hover {
+      color: var(--accent);
+      background: rgba(217, 21, 112, .08);
+      transform: translateY(-50%) scale(1.06);
+    }
+
+    /* Стилі оновленого інтерактивного аватара */
+    .avatar {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: #4b3f72;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: filter 0.2s ease, transform 0.1s ease;
+    }
+
+    .avatar.alt {
+      background-color: #b6809b;
+    }
+
+    .avatar:hover {
+      filter: brightness(0.85);
+    }
+
+    .avatar:active {
+      transform: scale(0.95);
+    }
+
+    /* Невелика іконка-підказка про редагування при наведенні */
+    .avatar::after {
+      content: "✎";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .avatar:hover::after {
+      opacity: 1;
+    }
+
+    .comment p {
+      max-width: 540px;
+      margin: 0;
+      color: #64687a;
+      font-size: 15px;
+      line-height: 1.48;
+    }
+
+    .comment-text {
+      flex: 1;
+      min-height: auto;
+      padding: 6px 10px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      outline: 0;
+      cursor: text;
+      transition: border-color .32s ease, background .32s ease, box-shadow .32s ease;
+    }
+
+    .comment-text:hover {
+      border-color: #d9dae2;
+      background: #fff;
+    }
+
+    .comment-text:focus {
+      border-color: var(--violet);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(53, 48, 111, .10);
+    }
+
+    .empty {
+      max-width: 520px;
+      padding: 48px 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 46px;
+      gap: 10px;
+      padding: 18px 32px 24px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+    }
+
+    .composer input,
+    .create-form input {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-bottom: 2px solid #d9dae2;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 600;
+      transition: border-color .32s ease, background-color .32s ease, box-shadow .32s ease, padding-left .32s ease;
+    }
+
+    .composer input:focus,
+    .create-form input:focus {
+      border-color: var(--violet);
+      background: rgba(53, 48, 111, .045);
+      box-shadow: 0 8px 20px rgba(53, 48, 111, .08);
+      padding-left: 10px;
+    }
+
+    .send {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--violet);
+      line-height: 1;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .create-view {
+      max-width: 620px;
+    }
+
+    .create-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 46px;
+      gap: 18px;
+      align-items: end;
+      padding-top: 6px;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        background: #f7f8fc;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100svh;
+        display: block;
+        grid-template-columns: 1fr;
+        box-shadow: none;
+      }
+
+      .sidebar {
+        display: block;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        min-height: 132px;
+        padding: 0 28px;
+      }
+
+      .brand h1 {
+        font-size: 44px;
+      }
+
+      .brand p {
+        font-size: 16px;
+      }
+
+      .items {
+        max-height: 210px;
+        padding: 0;
+        background: #fff;
+      }
+
+      .items:empty {
+        display: none;
+      }
+
+      .item-row {
+        min-height: 58px;
+        padding-left: 24px;
+      }
+
+      .delete-row {
+        height: 58px;
+      }
+
+      .add-item {
+        position: fixed;
+        right: 22px;
+        bottom: calc(22px + env(safe-area-inset-bottom));
+        left: auto;
+        z-index: 20;
+        transform: none;
+      }
+
+      .add-item:hover {
+        transform: translateY(-3px) scale(1.03);
+      }
+
+      .add-item:active {
+        transform: scale(.96);
+      }
+
+      .content {
+        min-height: calc(100svh - 132px);
+        display: grid;
+        grid-template-rows: auto minmax(320px, 1fr) auto;
+      }
+
+      .topbar,
+      .main,
+      .composer {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .topbar {
+        min-height: 84px;
+        gap: 12px;
+        align-items: center;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
+      .title-area {
+        min-width: 0;
+        flex: 1;
+        gap: 8px;
+      }
+
+      .topbar h2 {
+        max-width: none;
+        font-size: 24px;
+        line-height: 1.18;
+      }
+
+      .icon-button,
+      .title-action {
+        width: 46px;
+        height: 46px;
+      }
+
+      .main {
+        padding-top: 22px;
+        padding-bottom: 28px;
+      }
+
+      .comments {
+        gap: 18px;
+      }
+
+      .comment {
+        padding: 12px 40px 12px 14px;
+        gap: 14px;
+      }
+
+      .comment-delete {
+        opacity: 1;
+        right: 8px;
+      }
+
+      .avatar {
+        width: 42px;
+        height: 42px;
+      }
+
+      .composer {
+        gap: 12px;
+        padding-top: 14px;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+      }
+
+      .create-form {
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" aria-label="Елементи">
+      <header class="brand">
+        <h1>Sayer</h1>
+        <p>World's most used time waster</p>
+      </header>
+      <div class="items" id="items"></div>
+      <button class="add-item" id="newItemButton" type="button" aria-label="Створити елемент"></button>
+    </aside>
+
+    <section class="content" aria-live="polite">
+      <header class="topbar">
+        <button class="icon-button arrow-left" id="backButton" type="button" aria-label="Повернутися до списку"></button>
+        <div class="title-area">
+          <h2 id="screenTitle"></h2>
+          <button class="title-action" id="editTitleButton" type="button" aria-label="Редагувати назву"></button>
+          <form class="title-edit-form" id="titleEditForm" autocomplete="off" hidden>
+            <label class="visually-hidden" for="titleEditInput">Нова назва</label>
+            <input id="titleEditInput" name="title" maxlength="80" placeholder="Item title..." required>
+            <button class="mini-action" type="submit" aria-label="Зберегти назву">✓</button>
+            <button class="mini-action cancel" id="cancelTitleEdit" type="button" aria-label="Скасувати редагування">×</button>
+          </form>
+        </div>
+      </header>
+
+      <div class="main" id="mainPanel"></div>
+
+      <form class="composer" id="commentForm" autocomplete="off">
+        <label class="visually-hidden" for="commentInput">Новий коментар</label>
+        <input id="commentInput" name="comment" placeholder="New comment goes here..." maxlength="320">
+        <button class="send arrow-right" type="submit" aria-label="Додати коментар"></button>
+      </form>
+    </section>
+  </main>
+
+  <input type="file" id="avatarUploader" accept="image/*" style="display: none;">
+
+  <script>
+    const storageKey = "sayer-state-v2"; // Оновили ключ версії, бо формат даних розширився
+    const fallbackItems = [
+      {
+        id: crypto.randomUUID(),
+        title: "First item with customized long title",
+        comments: [
+          { text: "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.", avatar: "" },
+          { text: "Lorem Ipsum has a more-or-less normal distribution of letters, as opposed to using readable English.", avatar: "" }
+        ]
+      },
+      {
+        id: crypto.randomUUID(),
+        title: "Second Item",
+        comments: []
+      },
+      {
+        id: crypto.randomUUID(),
+        title: "Third item (short one)",
+        comments: [
+          { text: "A short note for later.", avatar: "" },
+          { text: "Remember to keep this item visible.", avatar: "" },
+          { text: "Another saved comment.", avatar: "" }
+        ]
+      }
+    ];
+
+    let state = loadState();
+    const itemsEl = document.querySelector("#items");
+    const mainPanel = document.querySelector("#mainPanel");
+    const screenTitle = document.querySelector("#screenTitle");
+    const commentForm = document.querySelector("#commentForm");
+    const commentInput = document.querySelector("#commentInput");
+    const newItemButton = document.querySelector("#newItemButton");
+    const backButton = document.querySelector("#backButton");
+    const editTitleButton = document.querySelector("#editTitleButton");
+    const titleEditForm = document.querySelector("#titleEditForm");
+    const titleEditInput = document.querySelector("#titleEditInput");
+    const cancelTitleEdit = document.querySelector("#cancelTitleEdit");
+    const avatarUploader = document.querySelector("#avatarUploader");
+
+    // Змінні для збереження поточного редагованого індексу коментаря
+    let currentEditingCommentIndex = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (saved && Array.isArray(saved.items)) {
+          return saved;
+        }
+      } catch {
+      }
+      
+      // Спроба міграції зі старої версії v1 (якщо коментарі були просто рядками)
+      try {
+        const oldSaved = JSON.parse(localStorage.getItem("sayer-state-v1"));
+        if (oldSaved && Array.isArray(oldSaved.items)) {
+          oldSaved.items.forEach(item => {
+            if(item.comments.length && typeof item.comments[0] === 'string') {
+              item.comments = item.comments.map(t => ({ text: t, avatar: "" }));
+            }
+          });
+          return oldSaved;
+        }
+      } catch {}
+
+      return {
+        mode: "detail",
+        selectedId: fallbackItems[0].id,
+        items: fallbackItems
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function activeItem() {
+      return state.items.find((item) => item.id === state.selectedId) || state.items[0] || null;
+    }
+
+    function render() {
+      renderItems();
+
+      if (state.mode === "create") {
+        renderCreate();
+        return;
+      }
+
+      const item = activeItem();
+      if (!item) {
+        state.mode = "create";
+        renderCreate();
+        return;
+      }
+
+      state.selectedId = item.id;
+      screenTitle.textContent = item.title;
+      stopTitleEditing();
+      editTitleButton.hidden = false;
+      commentForm.hidden = false;
+      mainPanel.innerHTML = "";
+
+      if (item.comments.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Коментарів поки немає. Додайте перший запис, і він збережеться для наступного відкриття.";
+        mainPanel.append(empty);
+      } else {
+        const list = document.createElement("div");
+        list.className = "comments";
+        item.comments.forEach((commentObj, index) => {
+          const row = document.createElement("article");
+          row.className = "comment";
+          
+          const avatar = document.createElement("div");
+          avatar.className = index % 2 ? "avatar alt" : "avatar";
+          avatar.title = "Натисніть, щоб змінити аватар";
+          
+          // Якщо для коментаря збережено кастомну картинку, встановлюємо її фоном
+          if (commentObj.avatar) {
+            avatar.style.backgroundImage = `url(${commentObj.avatar})`;
+          }
+
+          // Обробник кліку на аватар для виклику завантаження файлу
+          avatar.addEventListener("click", () => {
+            currentEditingCommentIndex = index;
+            avatarUploader.click();
+          });
+
+          const body = document.createElement("p");
+          body.className = "comment-text";
+          body.contentEditable = "true";
+          body.spellcheck = true;
+          body.setAttribute("aria-label", "Редагувати коментар");
+          body.textContent = commentObj.text;
+          
+          body.addEventListener("input", () => {
+            commentObj.text = body.textContent.trim();
+            saveState();
+          });
+          
+          body.addEventListener("blur", () => {
+            const updatedText = body.textContent.trim();
+            if (updatedText) {
+              commentObj.text = updatedText;
+              body.textContent = updatedText;
+            } else {
+              body.textContent = commentObj.text;
+            }
+            saveState();
+          });
+          row.append(avatar, body);
+
+          const remove = document.createElement("button");
+          remove.className = "comment-delete";
+          remove.type = "button";
+          remove.setAttribute("aria-label", "Видалити коментар");
+          remove.title = "Видалити коментар";
+          remove.addEventListener("click", () => {
+            item.comments.splice(index, 1);
+            render();
+          });
+          row.append(remove);
+
+          list.append(row);
+        });
+        mainPanel.append(list);
+      }
+
+      saveState();
+    }
+
+    // Слухач подій для інпуту файлів: зчитує картинку та кодує її у Base64 string
+    avatarUploader.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file || currentEditingCommentIndex === null) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const item = activeItem();
+        if (item && item.comments[currentEditingCommentIndex]) {
+          item.comments[currentEditingCommentIndex].avatar = e.target.result;
+          render(); // Перерендер сторінки для відображення змін
+        }
+      };
+      reader.readAsDataURL(file);
+      
+      // Скидаємо значення інпуту, щоб можна було повторно завантажувати той самий файл
+      event.target.value = "";
+    });
+
+    function renderItems() {
+      itemsEl.innerHTML = "";
+
+      state.items.forEach((item) => {
+        const row = document.createElement("div");
+        row.style.display = "grid";
+        row.style.gridTemplateColumns = item.id === state.selectedId && state.mode !== "create" ? "1fr auto" : "1fr";
+
+        const button = document.createElement("button");
+        button.className = "item-row" + (item.id === state.selectedId && state.mode !== "create" ? " is-active" : "");
+        button.type = "button";
+        button.addEventListener("click", () => {
+          state.mode = "detail";
+          state.selectedId = item.id;
+          render();
+        });
+
+        const title = document.createElement("span");
+        title.className = "item-title";
+        title.textContent = item.title;
+        const count = document.createElement("span");
+        count.className = "count";
+        count.textContent = item.comments.length;
+        button.append(title, count);
+        row.append(button);
+
+        if (item.id === state.selectedId && state.mode !== "create") {
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "delete-row";
+          deleteButton.type = "button";
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", () => deleteItem(item.id));
+          row.append(deleteButton);
+        }
+
+        itemsEl.append(row);
+      });
+    }
+
+    function renderCreate() {
+      screenTitle.textContent = "Create new item";
+      stopTitleEditing();
+      editTitleButton.hidden = true;
+      commentForm.hidden = true;
+      mainPanel.innerHTML = "";
+
+      const wrap = document.createElement("div");
+      wrap.className = "create-view";
+      wrap.innerHTML = `
+        <form class="create-form" id="createForm" autocomplete="off">
+          <label class="visually-hidden" for="titleInput">Назва елемента</label>
+          <input id="titleInput" name="title" placeholder="New item title..." maxlength="80" required>
+          <button class="send arrow-right" type="submit" aria-label="Створити елемент"></button>
+        </form>
+      `;
+      mainPanel.append(wrap);
+      const form = wrap.querySelector("#createForm");
+      const input = wrap.querySelector("#titleInput");
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const title = input.value.trim();
+        if (!title) {
+          input.focus();
+          return;
+        }
+        const item = { id: crypto.randomUUID(), title, comments: [] };
+        state.items.push(item);
+        state.selectedId = item.id;
+        state.mode = "detail";
+        render();
+      });
+      input.focus();
+      saveState();
+    }
+
+    function startTitleEditing() {
+      const item = activeItem();
+      if (!item || state.mode === "create") {
+        return;
+      }
+      titleEditInput.value = item.title;
+      screenTitle.hidden = true;
+      editTitleButton.hidden = true;
+      titleEditForm.hidden = false;
+      titleEditInput.focus();
+      titleEditInput.select();
+    }
+
+    function stopTitleEditing() {
+      screenTitle.hidden = false;
+      titleEditForm.hidden = true;
+    }
+
+    function saveTitleEdit() {
+      const item = activeItem();
+      const title = titleEditInput.value.trim();
+      if (!item || !title) {
+        titleEditInput.focus();
+        return;
+      }
+      item.title = title;
+      screenTitle.textContent = title;
+      stopTitleEditing();
+      editTitleButton.hidden = false;
+      renderItems();
+      saveState();
+    }
+
+    function deleteItem(id) {
+      const index = state.items.findIndex((item) => item.id === id);
+      if (index === -1) {
+        return;
+      }
+      state.items.splice(index, 1);
+      state.selectedId = state.items[Math.max(0, index - 1)]?.id || state.items[0]?.id || null;
+      state.mode = state.items.length ? "detail" : "create";
+      render();
+    }
+
+    commentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const item = activeItem();
+      const text = commentInput.value.trim();
+      if (!item || !text) {
+        commentInput.focus();
+        return;
+      }
+      // Додаємо новий коментар у вигляді об'єкта
+      item.comments.push({ text: text, avatar: "" });
+      commentInput.value = "";
+      render();
+    });
+
+    newItemButton.addEventListener("click", () => {
+      state.mode = "create";
+      render();
+    });
+
+    editTitleButton.addEventListener("click", startTitleEditing);
+
+    titleEditForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveTitleEdit();
+    });
+
+    cancelTitleEdit.addEventListener("click", () => {
+      stopTitleEditing();
+      editTitleButton.hidden = state.mode === "create";
+    });
+
+    titleEditInput.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        stopTitleEditing();
+        editTitleButton.hidden = state.mode === "create";
+      }
+    });
+
+    backButton.addEventListener("click", () => {
+      if (state.items.length) {
+        state.mode = "detail";
+        state.selectedId = activeItem()?.id || state.items[0].id;
+      } else {
+        state.mode = "create";
+      }
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
